@@ -381,6 +381,7 @@ body.light{--bg:#f5f5f3;--s1:#fff;--s2:#f0f0ee;--b1:#e0e0dd;--b2:#d0d0cc;--b3:#b
 /* ══════════════════════════════════════
    SUPABASE — production auth + storage
 ══════════════════════════════════════ */
+const GROQ_KEY = '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'; // 
 const SB_URL = 'https://hvifsgtwjklidkidreyl.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2aWZzZ3R3amtsaWRraWRyZXlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MTk1MjgsImV4cCI6MjA5NDk5NTUyOH0.MUAfUcLlnCcXqoC3wJhfnSWOU2a94xUEg3qcNOTRxE0';
 const sb = supabase.createClient(SB_URL, SB_ANON);
@@ -697,10 +698,10 @@ function autoGrow(){inpEl.style.height='auto';inpEl.style.height=Math.min(inpEl.
 async function generateQuestion(role,industry,type,diff,previousQuestions){
   const prevStr=previousQuestions.length?`\n\nDon't repeat these:\n${previousQuestions.map((q,i)=>`${i+1}. ${q}`).join('\n')}`:'';
   const prompt=`You are an expert interviewer at a top company. Generate ONE ${diff} difficulty ${type} interview question for a ${role} role in the ${industry} industry. Make it specific, realistic, and challenging.${prevStr}\n\nReturn ONLY the question text.`;
-  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-calls':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:250,messages:[{role:'user',content:prompt}]})});
+  const resp=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${GROQ_KEY}`},body:JSON.stringify({model:'llama-3.3-70b-versatile',max_tokens:250,messages:[{role:'system',content:'You are an expert interviewer at a top company. Generate ONE interview question. Return ONLY the question text — no numbering, no preamble.'},{role:'user',content:prompt}]})});
   if(!resp.ok)throw new Error('api '+resp.status);
   const data=await resp.json();
-  return(data.content||[]).map(c=>c.type==='text'?c.text:'').join('').trim();
+  return(data.choices||[])[0]?.message?.content?.trim()||'';
 }
 
 /* ══════════ AI ANSWER ANALYSER ══════════ */
@@ -714,7 +715,7 @@ Answer: "${answer}"
 Return exactly:
 {"total":<0-10>,"dims":{"structure":<0-10>,"analytical":<0-10>,"judgment":<0-10>,"creativity":<0-10>,"communication":<0-10>},"starAnalysis":{"situation":"<1-2 sentences>","task":"<1-2 sentences>","action":"<1-2 sentences>","result":"<1-2 sentences>"},"whatYouDidWell":["<strength 1>","<strength 2>"],"whereToImprove":["<gap 1>","<gap 2>"],"idealAnswer":"<3-5 sentence model answer>","followUpQuestion":"<natural follow-up>","reasoning":"<1-2 sentence verdict>"}`;
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-calls':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':ANTHROPIC_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-calls':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error('api '+resp.status);
     const data=await resp.json();
     let txt=(data.content||[]).map(c=>c.type==='text'?c.text:'').join('').trim().replace(/```json|```/g,'').trim();
