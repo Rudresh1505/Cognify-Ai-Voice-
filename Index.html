@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -696,7 +697,7 @@ function autoGrow(){inpEl.style.height='auto';inpEl.style.height=Math.min(inpEl.
 async function generateQuestion(role,industry,type,diff,previousQuestions){
   const prevStr=previousQuestions.length?`\n\nDon't repeat these:\n${previousQuestions.map((q,i)=>`${i+1}. ${q}`).join('\n')}`:'';
   const prompt=`You are an expert interviewer at a top company. Generate ONE ${diff} difficulty ${type} interview question for a ${role} role in the ${industry} industry. Make it specific, realistic, and challenging.${prevStr}\n\nReturn ONLY the question text.`;
-  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:250,messages:[{role:'user',content:prompt}]})});
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-calls':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:250,messages:[{role:'user',content:prompt}]})});
   if(!resp.ok)throw new Error('api '+resp.status);
   const data=await resp.json();
   return(data.content||[]).map(c=>c.type==='text'?c.text:'').join('').trim();
@@ -713,7 +714,7 @@ Answer: "${answer}"
 Return exactly:
 {"total":<0-10>,"dims":{"structure":<0-10>,"analytical":<0-10>,"judgment":<0-10>,"creativity":<0-10>,"communication":<0-10>},"starAnalysis":{"situation":"<1-2 sentences>","task":"<1-2 sentences>","action":"<1-2 sentences>","result":"<1-2 sentences>"},"whatYouDidWell":["<strength 1>","<strength 2>"],"whereToImprove":["<gap 1>","<gap 2>"],"idealAnswer":"<3-5 sentence model answer>","followUpQuestion":"<natural follow-up>","reasoning":"<1-2 sentence verdict>"}`;
   try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-calls':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
     if(!resp.ok)throw new Error('api '+resp.status);
     const data=await resp.json();
     let txt=(data.content||[]).map(c=>c.type==='text'?c.text:'').join('').trim().replace(/```json|```/g,'').trim();
